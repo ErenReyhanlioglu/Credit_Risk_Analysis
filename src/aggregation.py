@@ -19,7 +19,6 @@ def get_bb_agg_logic(df):
         'MONTHS_BALANCE': ['min', 'max', 'size']
     }
     
-    # Status-based features (sum for volume, mean for ratio)
     status_cols = [col for col in df.columns if 'STATUS_' in col]
     for col in status_cols:
         agg_logic[col] = ['mean', 'sum']
@@ -87,3 +86,139 @@ def aggregate_bureau_data(df, agg_logic):
     bureau_agg.columns = [f"BURO_{col[0]}_{col[1].upper()}" for col in bureau_agg.columns]
     
     return bureau_agg.reset_index()
+
+
+def get_installments_aggregation_logic(df):
+    agg_logic = {
+        'SK_ID_CURR': ['first'], 
+        
+        'NUM_INSTALMENT_VERSION': ['nunique'],
+        'NUM_INSTALMENT_NUMBER': ['max', 'mean'],
+        'DAYS_INSTALMENT': ['min', 'max', 'mean'],
+        'DAYS_ENTRY_PAYMENT': ['min', 'max', 'mean'],
+        'AMT_INSTALMENT': ['max', 'mean', 'sum'],
+        'AMT_PAYMENT': ['min', 'max', 'mean', 'sum'],
+        'INS_DPD': ['max', 'mean', 'sum'],
+        'INS_DBD': ['max', 'mean', 'sum'],
+        'INS_AMT_DIFF': ['max', 'mean', 'sum'],
+        'INS_AMT_RATIO': ['mean']
+    }
+    return agg_logic
+
+def aggregate_installments(df, agg_logic):
+    df['INS_DPD'] = (df['DAYS_ENTRY_PAYMENT'] - df['DAYS_INSTALMENT']).clip(lower=0)
+    df['INS_DBD'] = (df['DAYS_INSTALMENT'] - df['DAYS_ENTRY_PAYMENT']).clip(lower=0)
+    df['INS_AMT_DIFF'] = df['AMT_INSTALMENT'] - df['AMT_PAYMENT']
+    df['INS_AMT_RATIO'] = df['AMT_PAYMENT'] / (df['AMT_INSTALMENT'] + 0.00001)
+
+    ins_agg = df.groupby('SK_ID_PREV').agg(agg_logic)
+    
+    ins_agg.columns = [f"INS_{col[0]}_{col[1].upper()}" for col in ins_agg.columns]
+    
+    ins_agg = ins_agg.rename(columns={'INS_SK_ID_CURR_FIRST': 'SK_ID_CURR'})
+    return ins_agg.reset_index()
+
+def get_pos_cash_agg_logic(status_ohe_cols):
+    """
+    Defines the aggregation dictionary for POS_CASH features.
+    Separating logic from execution for cleaner maintenance.
+    """
+    agg_rules = {
+        'SK_ID_CURR': ['first'], 
+        'MONTHS_BALANCE': ['max', 'mean', 'size'],
+        'CNT_INSTALMENT': ['max', 'last'],
+        'CNT_INSTALMENT_FUTURE': ['min', 'max', 'mean'],
+        'SK_DPD': ['max', 'mean'],
+        'SK_DPD_DEF': ['max', 'mean']
+    }
+    
+    for col in status_ohe_cols:
+        agg_rules[col] = ['mean', 'sum']
+        
+    return agg_rules
+
+def aggregate_pos_cash(df):
+    """
+    Main orchestrator: Performs OHE, calls rules, and groups by Loan ID (SK_ID_PREV).
+    """
+    # Internal Preprocessing (One-Hot Encoding)
+    df = pd.get_dummies(df, columns=['NAME_CONTRACT_STATUS'], prefix='POS_STAT')
+    status_ohe_cols = [col for col in df.columns if col.startswith('POS_STAT_')]
+    
+    agg_logic = get_pos_cash_agg_logic(status_ohe_cols)
+    
+    pos_agg = df.groupby('SK_ID_PREV').agg(agg_logic)
+    
+    # Flatten MultiIndex columns (e.g., ('SK_DPD', 'max') -> 'POS_SK_DPD_MAX')
+    pos_agg.columns = [f"POS_{col[0]}_{col[1].upper()}" for col in pos_agg.columns]
+    
+    pos_agg = pos_agg.rename(columns={'POS_SK_ID_CURR_FIRST': 'SK_ID_CURR'})
+    
+    return pos_agg.reset_index()
+
+def get_credit_card_agg_rules(status_ohe_cols):
+    """
+    Optimized aggregation logic based on correlation and sparsity analysis.
+    Removed redundant receivables, overlapped payments, and sparse 'other' drawings.
+    """
+    agg_rules = {
+        'SK_ID_CURR': ['first'],
+        'MONTHS_BALANCE': ['max', 'mean', 'size'],
+        
+        # Core Balance and Limit
+        'AMT_BALANCE': ['max', 'mean', 'sum', 'var'],
+        'AMT_CREDIT_LIMIT_ACTUAL': ['max', 'mean'],
+        
+        # Specific Drawing Types (Excluded 'Other')
+        'AMT_DRAWINGS_ATM_CURRENT': ['max', 'sum'],
+        'AMT_DRAWINGS_CURRENT': ['max', 'sum'],
+        'AMT_DRAWINGS_POS_CURRENT': ['max', 'sum'],
+        
+        # Frequency of Usage
+        'CNT_DRAWINGS_ATM_CURRENT': ['max', 'sum'],
+        'CNT_DRAWINGS_CURRENT': ['max', 'sum'],
+        'CNT_DRAWINGS_POS_CURRENT': ['max', 'sum'],
+        
+        # Installment and Payment behavior
+        'AMT_INST_MIN_REGULARITY': ['max', 'mean'],
+        'AMT_PAYMENT_TOTAL_CURRENT': ['max', 'mean', 'sum'], # Kept Total over Current
+        'CNT_INSTALMENT_MATURE_CUM': ['max', 'mean'],
+        
+        # Final consolidated Receivable
+        'AMT_TOTAL_RECEIVABLE': ['max', 'mean', 'sum'],
+        
+        # Risk Indicators
+        'SK_DPD': ['max', 'mean'],
+        'SK_DPD_DEF': ['max', 'mean']
+    }
+    
+    # Status flags
+    for col in status_ohe_cols:
+        agg_rules[col] = ['mean', 'sum']
+        
+    return agg_rules
+
+def aggregate_credit_card(df):
+    """
+    Main orchestrator for credit card data. 
+    Includes feature engineering for utilization rates.
+    """
+    # How much of the limit is the customer using?
+    df['CC_UTILIZATION'] = df['AMT_BALANCE'] / (df['AMT_CREDIT_LIMIT_ACTUAL'] + 0.00001)
+    
+    # 2. Preprocessing: One-Hot Encoding for statuses
+    df = pd.get_dummies(df, columns=['NAME_CONTRACT_STATUS'], prefix='CC_STAT')
+    status_ohe_cols = [col for col in df.columns if col.startswith('CC_STAT_')]
+    
+    # 3. Get rules and add the new utilization feature
+    agg_rules = get_credit_card_agg_rules(status_ohe_cols)
+    agg_rules['CC_UTILIZATION'] = ['max', 'mean', 'var']
+    
+    # 4. Grouping by Loan ID (SK_ID_PREV)
+    cc_agg = df.groupby('SK_ID_PREV').agg(agg_rules)
+    
+    # 5. Flatten MultiIndex and Clean Up
+    cc_agg.columns = [f"CC_{col[0]}_{col[1].upper()}" for col in cc_agg.columns]
+    cc_agg = cc_agg.rename(columns={'CC_SK_ID_CURR_FIRST': 'SK_ID_CURR'})
+    
+    return cc_agg.reset_index()
