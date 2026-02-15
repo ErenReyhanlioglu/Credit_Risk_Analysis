@@ -3,7 +3,7 @@ Professional_Credit_Risk_Scorecard/
 │   ├── raw/                        # Give Me Some Credit / Home Credit ham verisi
 │   └── processed/                  # Temizlenmiş ve WoE uygulanmış veriler
 ├── notebooks/                      # Analiz ve Metodoloji Hikayesi
-│   ├── 01_data_integrity_check.ipynb
+│   ├── 01_data_integrity_check.ipynb      # Verinin projeye uygunluğunu test etmek (Siddiqi, Bölüm 3).
 │   ├── 02_fine_and_coarse_binning.ipynb   # Siddiqi Metodolojisi Bölüm 4
 │   ├── 03_weight_of_evidence_iv.ipynb     # ListenData Teknikleri 
 │   ├── 04_logistic_regression_scorecard.ipynb
