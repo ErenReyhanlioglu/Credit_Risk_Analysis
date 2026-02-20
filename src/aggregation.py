@@ -222,3 +222,85 @@ def aggregate_credit_card(df):
     cc_agg = cc_agg.rename(columns={'CC_SK_ID_CURR_FIRST': 'SK_ID_CURR'})
     
     return cc_agg.reset_index()
+
+def add_prev_domain_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds financial ratios based on Siddiqi/FICO standards to the previous applications table.
+    Uses a small epsilon (eps) to prevent division by zero errors.
+    """
+    df = df.copy()
+    eps = 1e-5 
+    
+    # 1. Application/Origination Ratios
+    df['APP_CREDIT_RATIO'] = df['AMT_CREDIT'] / (df['AMT_APPLICATION'] + eps)
+    df['LTV_RATIO'] = df['AMT_CREDIT'] / (df['AMT_GOODS_PRICE'] + eps)
+    df['DOWN_PAYMENT_RATIO'] = df['AMT_DOWN_PAYMENT'] / (df['AMT_GOODS_PRICE'] + eps)
+    df['ESTIMATED_TERM'] = df['AMT_CREDIT'] / (df['AMT_ANNUITY'] + eps)
+    
+    # 2. Behavioral/Repayment Ratios (Installments)
+    if 'INS_AMT_PAYMENT_SUM' in df.columns and 'INS_AMT_INSTALMENT_SUM' in df.columns:
+        df['PAYMENT_DISCIPLINE_RATIO'] = df['INS_AMT_PAYMENT_SUM'] / (df['INS_AMT_INSTALMENT_SUM'] + eps)
+        
+    # 3. Revolving/Credit Card Ratios
+    if 'CC_AMT_BALANCE_MEAN' in df.columns and 'CC_AMT_CREDIT_LIMIT_ACTUAL_MEAN' in df.columns:
+        df['CC_UTILIZATION_RATIO'] = df['CC_AMT_BALANCE_MEAN'] / (df['CC_AMT_CREDIT_LIMIT_ACTUAL_MEAN'] + eps)
+    
+    if 'CC_AMT_DRAWINGS_ATM_CURRENT_SUM' in df.columns and 'CC_AMT_DRAWINGS_CURRENT_SUM' in df.columns:
+        df['CC_CASH_ADVANCE_RATIO'] = df['CC_AMT_DRAWINGS_ATM_CURRENT_SUM'] / (df['CC_AMT_DRAWINGS_CURRENT_SUM'] + eps)
+        
+    return df
+
+def get_prev_aggregation_rules(df: pd.DataFrame) -> dict:
+    """
+    Determines aggregation rules (min, max, mean, sum) dynamically 
+    based on column names and data types.
+    """
+    agg_rules = {}
+    
+    # Select numeric columns excluding IDs
+    num_cols = [c for c in df.select_dtypes(include=['number']).columns 
+                if c not in ['SK_ID_CURR', 'SK_ID_PREV']]
+    
+    for col in num_cols:
+        # A. Monetary amounts and ratios
+        if any(keyword in col for keyword in ['AMT', 'RATIO', 'RATE', 'PERC']):
+            agg_rules[col] = ['min', 'max', 'mean', 'sum']
+        
+        # B. Days Past Due (DPD) - Penalties
+        elif 'DPD' in col:
+            agg_rules[col] = ['max', 'mean']
+            
+        # C. Timelines (Days/Months)
+        elif 'DAYS' in col or 'MONTHS' in col:
+            agg_rules[col] = ['min', 'max', 'mean']
+            
+        # D. OHE (0-1) Categorical Columns
+        elif df[col].nunique() <= 2:
+            agg_rules[col] = ['mean', 'sum'] 
+            
+        # E. Fallback for everything else
+        else:
+            agg_rules[col] = ['min', 'max', 'mean']
+            
+    return agg_rules
+
+def aggregate_prev_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Main runner function:
+    1. Adds domain features.
+    2. Determines dynamic aggregation rules.
+    3. Collapses table at customer level (SK_ID_CURR) via groupby.
+    4. Cleans and flattens column names.
+    """
+    df_featured = add_prev_domain_features(df)
+    
+    agg_rules = get_prev_aggregation_rules(df_featured)
+    
+    agg_df = df_featured.groupby('SK_ID_CURR').agg(agg_rules)
+    
+    agg_df.columns = [f"PREV_{col[0]}_{col[1].upper()}" for col in agg_df.columns]
+    
+    agg_df = agg_df.reset_index()
+    
+    print(f"[SUCCESS] Aggregation complete! New shape: {agg_df.shape}")
+    return agg_df
