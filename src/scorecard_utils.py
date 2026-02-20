@@ -139,3 +139,47 @@ def get_health_summary(df_health):
     
     critical_df = df_health[df_health["Health_Score"] != "STABLE"]
     return critical_df
+
+import pandas as pd
+import numpy as np
+
+def filter_by_correlation(df_woe, binning_results, threshold=0.80):
+    """
+    Removes highly correlated features by keeping the one with the highest IV.
+    
+    Args:
+        df_woe (pd.DataFrame): WoE transformed features (including TARGET).
+        binning_results (dict): Dictionary containing fitted OptimalBinning objects.
+        threshold (float): Correlation threshold (default 0.80).
+        
+    Returns:
+        list: List of uncorrelated features.
+    """
+    features = [col for col in df_woe.columns if col != 'TARGET']
+    corr_matrix = df_woe[features].corr().abs()
+    
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    
+    to_drop = set()
+    
+    for col in upper.columns:
+        correlated_with_col = upper.index[upper[col] > threshold].tolist()
+        
+        for correlated_feat in correlated_with_col:
+            iv_col = binning_results[col].binning_table.iv
+            iv_corr = binning_results[correlated_feat].binning_table.iv
+            
+            if iv_col >= iv_corr:
+                if correlated_feat not in to_drop:
+                    to_drop.add(correlated_feat)
+            else:
+                if col not in to_drop:
+                    to_drop.add(col)
+                    
+    final_features = [f for f in features if f not in to_drop]
+    
+    print(f"Initial features: {len(features)}")
+    print(f"Features dropped due to high correlation: {len(to_drop)}")
+    print(f"Remaining features: {len(final_features)}")
+    
+    return final_features
