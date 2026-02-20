@@ -84,3 +84,58 @@ def get_statistical_sample(df: pd.DataFrame, target_col: str, confidence_level: 
     )
     
     return sample_df
+
+def run_feature_health_check(binning_results):
+    """
+    Analyzes feature health while strictly excluding summary rows.
+    Fixed ValueError by enforcing string casting for comparisons.
+    """
+    health_data = []
+
+    for col, optb in binning_results.items():
+        bt = optb.binning_table.build()
+        
+        bin_labels = bt['Bin'].astype(str)
+        
+        is_missing = bin_labels.str.contains("Missing", na=False, case=False)
+        is_special = bin_labels.str.contains("Special", na=False, case=False)
+        is_total = bin_labels.str.contains("Total", na=False, case=False) | (bin_labels == "") | (bin_labels == "nan")
+        
+        missing_rate = bt[is_missing]['Count (%)'].values[0] if any(is_missing) else 0
+        
+        actual_bins = bt[~(is_missing | is_special | is_total)].copy()
+        
+        max_dist = actual_bins['Count (%)'].max() if not actual_bins.empty else 0
+        bin_count = len(actual_bins)
+        iv = optb.binning_table.iv
+        status = optb.status
+        
+        reasons = []
+        if missing_rate > 0.50: reasons.append("High Missing")
+        if max_dist > 0.85: reasons.append("Over-Concentrated")
+        if status != "OPTIMAL": reasons.append("Non-Optimal Trend")
+        if bin_count < 2: reasons.append("Insufficient Bins")
+        
+        health_status = "STABLE" if not reasons else "CRITICAL: " + ", ".join(reasons)
+        
+        health_data.append({
+            "Feature": col,
+            "IV": round(iv, 4),
+            "Missing_Rate": round(missing_rate, 4),
+            "Max_Bin_Dist": round(max_dist, 4),
+            "Bin_Count": bin_count,
+            "Health_Score": health_status
+        })
+
+    return pd.DataFrame(health_data).sort_values(by="IV", ascending=False)
+
+def get_health_summary(df_health):
+    print("\n" + "="*50)
+    print("      FEATURE STABILITY AUDIT SUMMARY")
+    print("="*50)
+    summary = df_health["Health_Score"].value_counts()
+    print(summary)
+    print("-" * 50)
+    
+    critical_df = df_health[df_health["Health_Score"] != "STABLE"]
+    return critical_df
