@@ -1,16 +1,16 @@
 Professional_Credit_Risk_Scorecard/
 ├── data/
 │   ├── raw/                        # Give Me Some Credit / Home Credit ham verisi
-│   └── processed/                  # Temizlenmiş ve WoE uygulanmış veriler
+│   └── processed/                  
 ├── notebooks/                      # Analiz ve Metodoloji Hikayesi
 │   ├── 01_data_integrity_check.ipynb      # Verinin projeye uygunluğunu test etmek (Siddiqi, Bölüm 3).
-│   ├── 02_fine_and_coarse_binning.ipynb   # Siddiqi Metodolojisi Bölüm 4
-│   ├── 03_weight_of_evidence_iv.ipynb     # ListenData Teknikleri 
-│   ├── 04_logistic_regression_scorecard.ipynb
-│   └── 05_model_diagnostics_performance.ipynb # Gini, KS, PSI Analizi 
+│   ├── 02_feature_selection_and_binning.ipynb   # Siddiqi Metodolojisi Bölüm 4 ve ListenData Teknikleri
+│   ├── 03_logistic_regression_scorecard.ipynb
+│   └── 04_model_diagnostics_performance.ipynb # Gini, KS, PSI Analizi 
 ├── src/                            # Modüler Mühendislik Kodları
 │   ├── __init__.py
-│   ├── preprocessing.py            # Aykırı değer ve eksik veri yönetimi
+│   ├── preprocessing.py             
+│   ├── aggregation.py               
 │   ├── scorecard_utils.py          # Lojistik regresyonu puan kartına çeviren fonksiyonlar
 │   └── metrics.py                  # Gini ve KS istatistiği hesaplama 
 ├── outputs/
