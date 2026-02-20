@@ -3,6 +3,7 @@ import scorecardpy as sc
 import math
 import numpy as np
 from sklearn.model_selection import train_test_split
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 def filter_features_by_iv(df: pd.DataFrame, target_col: str = 'TARGET', min_iv: float = 0.02, max_iv: float = 0.50):
     """
@@ -183,3 +184,27 @@ def filter_by_correlation(df_woe, binning_results, threshold=0.80):
     print(f"Remaining features: {len(final_features)}")
     
     return final_features
+
+def calculate_vif(df_woe, feature_list):
+    """
+    Calculates VIF for a given list of features.
+    
+    Args:
+        df_woe (pd.DataFrame): WoE transformed dataframe.
+        feature_list (list): List of features to check for VIF.
+        
+    Returns:
+        pd.DataFrame: VIF values for each feature.
+    """
+    # VIF requires a constant/intercept, but since we use WoE, 
+    # the relative differences are what matters. 
+    # We create a temporary X dataframe.
+    X = df_woe[feature_list].copy()
+    
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = X.columns
+    
+    vif_data["VIF"] = [variance_inflation_factor(X.values, i) 
+                       for i in range(len(X.columns))]
+    
+    return vif_data.sort_values(by="VIF", ascending=False)
