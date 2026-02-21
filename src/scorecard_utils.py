@@ -4,6 +4,7 @@ import math
 import numpy as np
 from sklearn.model_selection import train_test_split
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+import statsmodels.api as sm
 
 def filter_features_by_iv(df: pd.DataFrame, target_col: str = 'TARGET', min_iv: float = 0.02, max_iv: float = 0.50):
     """
@@ -208,3 +209,46 @@ def calculate_vif(df_woe, feature_list):
                        for i in range(len(X.columns))]
     
     return vif_data.sort_values(by="VIF", ascending=False)
+
+def fit_logistic_regression(X, y):
+    """
+    Fits a Logistic Regression model using statsmodels.
+    Adds a constant term (intercept) to the features.
+    """
+    # Statsmodels requires adding a constant for the intercept term
+    X_with_const = sm.add_constant(X)
+    
+    # Fit the Logit model
+    model = sm.Logit(y, X_with_const)
+    result = model.fit()
+    
+    return result
+
+def iterative_p_value_elimination(X, y, threshold=0.05):
+    """
+    Performs backward elimination based on P-Values.
+    In each step, fits the model and removes the feature with the highest 
+    P-Value that is above the significance threshold.
+    """
+    features = list(X.columns)
+    iteration = 1
+    
+    while len(features) > 0:
+        X_const = sm.add_constant(X[features])
+        model = sm.Logit(y, X_const).fit(disp=False)
+        
+        # Get p-values excluding the constant/intercept
+        p_values = model.pvalues.drop('const')
+        max_p = p_values.max()
+        
+        if max_p > threshold:
+            feature_to_remove = p_values.idxmax()
+            features.remove(feature_to_remove)
+            print(f"Iteration {iteration}: Removed '{feature_to_remove}' with P-Value: {max_p:.4f}")
+            iteration += 1
+        else:
+            print("-" * 30)
+            print(f"Pruning finished. Final feature count: {len(features)}")
+            break
+            
+    return features, model

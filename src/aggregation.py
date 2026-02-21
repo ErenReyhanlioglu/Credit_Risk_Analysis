@@ -302,5 +302,4 @@ def aggregate_prev_data(df: pd.DataFrame) -> pd.DataFrame:
     
     agg_df = agg_df.reset_index()
     
-    print(f"[SUCCESS] Aggregation complete! New shape: {agg_df.shape}")
     return agg_df
