@@ -252,3 +252,20 @@ def iterative_p_value_elimination(X, y, threshold=0.05):
             break
             
     return features, model
+
+def check_beta_signs(model_result, expected_sign='negative'):
+    """
+    Checks the signs of the coefficients in a fitted statsmodels Logit model.
+    Returns a list of features that violate the expected business logic (sign).
+    """
+    # Extract coefficients, excluding the constant (intercept)
+    coefs = model_result.params.drop('const')
+    
+    if expected_sign == 'negative':
+        violators = coefs[coefs > 0].index.tolist()
+    elif expected_sign == 'positive':
+        violators = coefs[coefs < 0].index.tolist()
+    else:
+        raise ValueError("expected_sign must be either 'negative' or 'positive'")
+        
+    return violators
