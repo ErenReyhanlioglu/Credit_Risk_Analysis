@@ -269,3 +269,59 @@ def check_beta_signs(model_result, expected_sign='negative'):
         raise ValueError("expected_sign must be either 'negative' or 'positive'")
         
     return violators
+
+def calculate_scaling_params(pdo=20, base_score=600, base_odds=50):
+    """
+    Calculates the Factor and Offset for Scorecard Scaling.
+    Siddiqi Methodology:
+    Factor = PDO / ln(2)
+    Offset = Base_Score - Factor * ln(Base_Odds)
+    """
+    factor = pdo / np.log(2)
+    offset = base_score - factor * np.log(base_odds)
+    return factor, offset
+
+def generate_scorecard(model_result, features, pdo=20, base_score=600, base_odds=50):
+    """
+    Converts Logistic Regression coefficients (Log-Odds) into Scorecard Points.
+    Assumes higher score = lower risk (better customer).
+    Since our model predicts P(Bad), Log-Odds = ln(Bad/Good).
+    We want Odds = Good/Bad, so we reverse the sign of the coefficients.
+    """
+    factor, offset = calculate_scaling_params(pdo, base_score, base_odds)
+    
+    coefs = model_result.params
+    
+    n = len(features)
+    
+    intercept_coef = coefs['const']
+    intercept_points = offset - (factor * intercept_coef)
+    
+    scorecard = pd.DataFrame({
+        'Feature': features,
+        'Coefficient': [coefs[f] for f in features]
+    })
+    
+    # Point formula: - (Factor * Coefficient)
+    scorecard['Points'] = round(-1 * factor * scorecard['Coefficient'])
+    
+    scorecard = scorecard.sort_values(by='Points', ascending=False).reset_index(drop=True)
+    
+    return round(intercept_points), scorecard
+
+def calculate_customer_scores(X_woe, scorecard_df, intercept_points):
+    """
+    Applies the Scorecard points to customer WoE data to calculate final Credit Scores.
+    Formula: Score = Intercept + Sum(WoE_i * Points_i)
+    """
+    features = scorecard_df['Feature'].tolist()
+    X_subset = X_woe[features]
+    
+    points_series = scorecard_df.set_index('Feature')['Points']
+    
+    # (n_customers, n_features) x (n_features, 1) = (n_customers, 1)
+    feature_scores = X_subset.dot(points_series)
+    
+    total_scores = feature_scores + intercept_points
+    
+    return total_scores.round().astype(int)
