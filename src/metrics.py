@@ -289,3 +289,108 @@ def plot_tradeoff_curve(cutoff_matrix):
     plt.tight_layout()
 
     plt.show()
+
+def calculate_psi(expected, actual, buckets=10):
+    """
+    Calculates the Population Stability Index (PSI).
+    expected: Baseline distribution (Train scores)
+    actual: New distribution (Test/Production scores)
+    """
+    def scale_range(data, bins):
+        breakpoints = np.linspace(0, 100, bins + 1)
+        breakpoints = np.percentile(data, breakpoints)
+        breakpoints[0] = -np.inf 
+        breakpoints[-1] = np.inf 
+        return np.unique(breakpoints)
+
+    breakpoints = scale_range(expected, buckets)
+    
+    expected_counts = pd.cut(expected, bins=breakpoints).value_counts(sort=False)
+    actual_counts = pd.cut(actual, bins=breakpoints).value_counts(sort=False)
+    
+    # Normalize
+    expected_percents = expected_counts / len(expected)
+    actual_percents = actual_counts / len(actual)
+    
+    expected_percents = expected_percents.replace(0, 0.0001)
+    actual_percents = actual_percents.replace(0, 0.0001)
+    
+    # PSI Formula: (Actual% - Expected%) * ln(Actual% / Expected%)
+    psi_values = (actual_percents - expected_percents) * np.log(actual_percents / expected_percents)
+    total_psi = np.sum(psi_values)
+    
+    psi_df = pd.DataFrame({
+        'Bucket': expected_counts.index,
+        'Expected_%': expected_percents.values * 100,
+        'Actual_%': actual_percents.values * 100,
+        'PSI_Contribution': psi_values.values
+    })
+    
+    return total_psi, psi_df
+
+def calculate_csi(train_df, test_df, feature_list, buckets=10):
+    """
+    Calculates the Characteristic Stability Index (CSI) for multiple features.
+    """
+    csi_results = {}
+    for feature in feature_list:
+        csi_val, _ = calculate_psi(train_df[feature], test_df[feature], buckets)
+        csi_results[feature] = csi_val
+    
+    return pd.Series(csi_results).sort_values(ascending=False)
+
+def plot_psi_distribution(psi_details):
+    """
+    Plots the expected vs actual distribution from the PSI details table.
+    """
+    plt.figure(figsize=(12, 6))
+    
+    buckets = np.arange(len(psi_details))
+    width = 0.35
+    
+    # Plot Bars
+    plt.bar(buckets - width/2, psi_details['Expected_%'], width, label='Train (Expected)', color='#3498db', alpha=0.8)
+    plt.bar(buckets + width/2, psi_details['Actual_%'], width, label='Test (Actual)', color='#e74c3c', alpha=0.8)
+    
+    plt.title('PSI Stability: Score Distribution Comparison', fontsize=15, fontweight='bold')
+    plt.xlabel('Score Buckets (Low to High Risk)', fontsize=12)
+    plt.ylabel('Population Percentage (%)', fontsize=12)
+    plt.xticks(buckets, [f"B{i}" for i in range(len(psi_details))])
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.6)
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_csi_report(csi_series, use_log=True):
+    fig, ax = plt.subplots(figsize=(12, 10))
+    
+    csi_sorted = csi_series.sort_values(ascending=True)
+    colors = ['#27ae60' if x < 0.1 else '#f1c40f' if x < 0.25 else '#e74c3c' for x in csi_sorted]
+    
+    ax.barh(csi_sorted.index, csi_sorted.values + 1e-7, color=colors, alpha=0.8)
+    
+    if use_log:
+        ax.set_xscale('log')
+        ax.set_xlabel('CSI Value (Logarithmic Scale)', fontsize=12, labelpad=10)
+    else:
+        ax.set_xlabel('CSI Value', fontsize=12, labelpad=10)
+
+    ax.axvline(x=0.1, color='orange', linestyle='--', label='Warning (0.1)')
+    ax.axvline(x=0.25, color='red', linestyle='--', label='Critical (0.25)')
+    
+    fig.suptitle('Characteristic Stability Index (CSI) - Log Scale View', 
+                 fontsize=18, 
+                 fontweight='bold', 
+                 x=0.5) 
+    
+    ax.set_ylabel('Features', fontsize=10, fontweight='bold')
+    
+    ax.legend(loc='lower right', frameon=True, shadow=True)
+    ax.grid(axis='x', which="both", alpha=0.3) 
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+    plt.show()
