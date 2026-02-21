@@ -30,3 +30,9 @@ data/processed/
 
 # Logs
 *.log
+
+!outputs/
+!outputs/**/
+!outputs/**/*.csv
+!outputs/**/*.xlsx
+!outputs/**/*.pkl
