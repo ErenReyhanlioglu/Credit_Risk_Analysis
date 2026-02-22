@@ -1,11 +1,23 @@
-pandas>=2.0.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-scikit-learn>=1.2.0
-statsmodels>=0.14.0
+# Data Manipulation & Core Computation
+pandas==3.0.0
+numpy==2.4.2
 scipy>=1.10.0
-optbinning>=0.17.0  
-jupyter
-openpyxl  
-joblib    
+
+# Statistical Modeling & Machine Learning
+scikit-learn==1.8.0
+statsmodels==0.14.6
+optbinning==0.21.0
+scorecardpy==0.1.9.7
+joblib
+
+# Visualization & Styling
+matplotlib==3.10.8
+seaborn==0.13.2
+jinja2>=3.1.2
+
+# Data Export & I/O
+openpyxl
+
+# Interactive Environment (Jupyter)
+IPython==9.10.0
+jupyterlab>=4.0.0
