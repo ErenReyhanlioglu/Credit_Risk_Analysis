@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 import matplotlib.pyplot as plt
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import brier_score_loss
 
 def calculate_gini(y_true, y_prob):
     """
@@ -394,3 +396,96 @@ def plot_csi_report(csi_series, use_log=True):
     
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
     plt.show()
+
+def plot_quantile_calibration_curve(y_true, y_prob, n_bins=10):
+    """
+    Plots a calibration curve using quantile-based binning to handle imbalanced data.
+    Each bin contains the same number of samples.
+    """
+    prob_true, prob_pred = calibration_curve(y_true, y_prob, n_bins=n_bins, strategy='quantile')
+    
+    plt.figure(figsize=(8, 6))
+    plt.plot(prob_pred, prob_true, marker='s', linewidth=2, label='Model (Quantile Bins)')
+    plt.plot([0, prob_pred.max()], [0, prob_pred.max()], linestyle='--', color='gray', label='Perfectly Calibrated')
+    
+    plt.xlabel('Mean Predicted Probability (Quantile-based PD)', fontsize=12)
+    plt.ylabel('Fraction of Positives (Actual PD)', fontsize=12)
+    plt.title('PD Calibration Curve: Quantile Strategy', fontsize=14, fontweight='bold')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    
+    for i, (x, y) in enumerate(zip(prob_pred, prob_true)):
+        plt.annotate(f'Bin {i+1}', (x, y), textcoords="offset points", xytext=(0,10), ha='center', fontsize=8)
+        
+    plt.show()
+
+def generate_score_pd_mapping(df, score_col='SCORE', target_col='TARGET', n_bins=10):
+    """
+    Maps scores to risk grades and calculates real-world PD for each bucket.
+    """
+    df = df.copy()
+    # High score = Low risk, so G1 is the highest score group
+    df['Risk_Grade'] = pd.qcut(df[score_col], q=n_bins, labels=[f'G{i}' for i in range(1, n_bins+1)][::-1])
+    
+    mapping = df.groupby('Risk_Grade').agg(
+        Min_Score=(score_col, 'min'),
+        Max_Score=(score_col, 'max'),
+        Actual_PD=(target_col, 'mean'),
+        Customer_Count=(target_col, 'count')
+    ).reset_index()
+    
+    mapping['Actual_PD_%'] = (mapping['Actual_PD'] * 100).round(2)
+    return mapping
+
+def generate_score_pd_mapping(df, score_col='SCORE', target_col='TARGET', n_bins=10):
+    """
+    Creates a mapping table between score ranges and average Probability of Default (PD).
+    """
+    df = df.copy()
+    
+    df = df.sort_values(by=score_col, ascending=False)
+    
+    # Create Risk Grades (G1: Best to G10: Worst)
+    df['Risk_Grade'] = pd.qcut(df[score_col], q=n_bins, labels=[f'G{i}' for i in range(1, n_bins+1)])
+    
+    mapping_table = df.groupby('Risk_Grade').agg(
+        Min_Score=(score_col, 'min'),
+        Max_Score=(score_col, 'max'),
+        Avg_PD=(target_col, 'mean'),
+        Customer_Count=(target_col, 'count')
+    ).reset_index()
+    
+    mapping_table['Avg_PD_%'] = (mapping_table['Avg_PD'] * 100).round(2)
+    
+    return mapping_table
+
+def calculate_brier_score(y_true, y_prob):
+    """
+    Calculates the Brier Score to measure the accuracy of probabilistic predictions.
+    Lower is better (0 is perfect).
+    """
+    return brier_score_loss(y_true, y_prob)
+
+def calculate_expected_calibration_error(y_true, y_prob, n_bins=10):
+    """
+    Calculates the Expected Calibration Error (ECE). 
+    Measures the average gap between confidence and accuracy across bins.
+    Lower is better (0 is perfect).
+    """
+    bin_boundaries = np.linspace(0, 1, n_bins + 1)
+    bin_lowers = bin_boundaries[:-1]
+    bin_uppers = bin_boundaries[1:]
+    
+    ece = 0
+    total_samples = len(y_true)
+    
+    for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+        in_bin = (y_prob > bin_lower) & (y_prob <= bin_upper)
+        bin_weight = np.sum(in_bin) / total_samples
+        
+        if bin_weight > 0:
+            accuracy_in_bin = np.mean(y_true[in_bin])
+            confidence_in_bin = np.mean(y_prob[in_bin])
+            ece += bin_weight * np.abs(accuracy_in_bin - confidence_in_bin)
+            
+    return ece
