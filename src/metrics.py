@@ -440,15 +440,15 @@ def generate_score_pd_mapping(df, score_col='SCORE', target_col='TARGET', n_bins
 def generate_score_pd_mapping(df, score_col='SCORE', target_col='TARGET', n_bins=10):
     """
     Creates a mapping table between score ranges and average Probability of Default (PD).
+    High Score = Low Risk (G1), Low Score = High Risk (G10)
     """
     df = df.copy()
     
-    df = df.sort_values(by=score_col, ascending=False)
+    labels = [f'G{i}' for i in range(n_bins, 0, -1)]
     
-    # Create Risk Grades (G1: Best to G10: Worst)
-    df['Risk_Grade'] = pd.qcut(df[score_col], q=n_bins, labels=[f'G{i}' for i in range(1, n_bins+1)])
+    df['Risk_Grade'] = pd.qcut(df[score_col], q=n_bins, labels=labels)
     
-    mapping_table = df.groupby('Risk_Grade').agg(
+    mapping_table = df.groupby('Risk_Grade', observed=False).agg(
         Min_Score=(score_col, 'min'),
         Max_Score=(score_col, 'max'),
         Avg_PD=(target_col, 'mean'),
@@ -456,6 +456,8 @@ def generate_score_pd_mapping(df, score_col='SCORE', target_col='TARGET', n_bins
     ).reset_index()
     
     mapping_table['Avg_PD_%'] = (mapping_table['Avg_PD'] * 100).round(2)
+    
+    mapping_table = mapping_table.sort_values('Min_Score', ascending=False).reset_index(drop=True)
     
     return mapping_table
 
