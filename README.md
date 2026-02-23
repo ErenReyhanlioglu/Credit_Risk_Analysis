@@ -271,7 +271,7 @@ $$PSI = \sum_{i=1}^{Bins} (Actual\%_i - Expected\%_i) \cdot \ln\left(\frac{Actua
 * **0.10 $\le$ PSI < 0.25:** Minör Kayma / İzleme Gerekir (Sarı Bölge)
 * **PSI $\ge$ 0.25:** Majör Kayma / Yeniden Kalibrasyon Şart (Kırmızı Bölge)
 
-> **Methodological Insight:** Elde edilen 0.0002 değeri, 0.10 olan kırmızı çizginin çok altındadır. Bu durum; 70/30 veri bölme işleminin homojenlik bir şekilde gerçekleştiğini, Eğitim setinde hesaplanan WoE/Kesme noktalarının Test setine uygulanırken veri sızıntısı (Leakage) veya dağılım bozulmasına sebep olmadığını gösterir.
+Elde edilen 0.0002 değeri, 0.10 olan kırmızı çizginin çok altındadır. Bu durum; 70/30 veri bölme işleminin homojenlik bir şekilde gerçekleştiğini, Eğitim setinde hesaplanan WoE/Kesme noktalarının Test setine uygulanırken veri sızıntısı (Leakage) veya dağılım bozulmasına sebep olmadığını gösterir.
 
 ![Population Stability Index Distribution](outputs/reports/psi_stability_score_distribution_comp.png)
 
