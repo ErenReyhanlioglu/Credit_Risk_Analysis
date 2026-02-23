@@ -161,7 +161,7 @@ Modelin riskleri ayırt etme yeteneği (Rank Ordering) iki temel makro metrik il
 ### 6.3. Rank Ordering & Decile Analysis
 Modelin ürettiği skorlar ondalık dilimlere (Deciles) bölünmüş ve skor düştükçe "Bad Rate"in (Temerrüt Oranının) düzenli olarak artıp artmadığı test edilmiştir. İnceleme sonucunda, risk profilinde "zikzakların" olmadığı, yüksek riskli ilk dilimlerde (Bottom Deciles) kötü müşterilerin başarılı bir şekilde yoğunlaştığı (Concentration) doğrulanmıştır.
 
-| Decile | Skor Aralığı | Toplam Müşteri | Kötü Müşteri (Default) | Temerrüt Oranı (Bad Rate) | Kümülatif Kötü Müşteri (%) | KS İstatistiği | Lift (Katma Değer) |
+| Risk Dilimi (Decile) | Skor Bandı | Müşteri Sayısı (N) | Temerrüt Sayısı (Bad) | Gerçekleşen Risk (Bad Rate) | Kümülatif Yakalama (%) | Kümülatif KS | Lift Çarpanı |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **1** | 440 - 532 | 9.226 | 2.244 | **%24.32** | %30.13 | 21.90 | **3.01x** |
 | **2** | 532 - 545 | 9.225 | 1.278 | **%13.85** | %47.29 | 29.68 | **1.72x** |
