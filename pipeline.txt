@@ -1,22 +1,23 @@
-Professional_Credit_Risk_Scorecard/
-├── data/
-│   ├── raw/                                     
-│   └── processed/                  
-├── notebooks/                                   
-│   ├── 01_data_integrity_check.ipynb            
-│   ├── 02_feature_selection_and_binning.ipynb   
-│   ├── 03_logistic_regression_scorecard.ipynb
-│   ├── 04_model_diagnostics_performance.ipynb   
-│   └── 05_model_monitoring_stability_psi.ipynb  
-├── src/                            
+## 8. Directory Structure
+*Not: Orijinal `data/raw/` ve `data/processed/` klasörleri dosya boyutu limitleri nedeniyle GitHub reposuna dahil edilmemiştir. Veri setinin orijinal hali Kaggle "Home Credit Default Risk" yarışmasından temin edilebilir.*
+
+```text
+Credit_Risk_Analysis/
+├── notebooks/
+│   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
+│   ├── 02_feature_selection_and_binning.ipynb # IV/WoE dönüşümleri, Monotonic Binning ve VIF analizi
+│   ├── 03_logistic_regression_scorecard.ipynb # Model eğitimi, p-value/mantık elemesi ve Scorecard inşası
+│   ├── 04_model_diagnostics_performance.ipynb # Gini, KS, Brier metrikleri ve Cut-off (Eşik Değer) stratejisi
+│   └── 05_model_monitoring_stability_psi.ipynb# PSI/CSI stabilite testleri ve veri kayması (drift) izleme
+├── src/
 │   ├── __init__.py
-│   ├── preprocessing.py             
-│   ├── aggregation.py               
-│   ├── scorecard_utils.py          
-│   └── metrics.py                  
+│   ├── preprocessing.py              # Domain spesifik özellik (DTI, LTV vb.) üretimi ve veri dönüşümleri
+│   ├── aggregation.py                # Alt tabloları (bureau, previous_application vb.) müşteri seviyesinde birleştirme
+│   ├── scorecard_utils.py            # IV, VIF, P-Value eleme (Pruning) ve Log-Odds to Points (Ölçeklendirme) fonksiyonları
+│   └── metrics.py                    # Gini, KS, PSI hesaplama, Cut-off simülasyonları ve Diagnostik Görselleştirme araçları
 ├── outputs/
-│   ├── models/                     # .pkl veya .joblib formatında modeller
-│   ├── reports/                    # Model Kararlılık Raporları (PSI)
-│   └── final_scorecard.xlsx        # İş birimine sunulacak nihai puan kartı
-├── requirements.txt
-└── README.md                       
+│   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
+│   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
+│   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
+├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
+└── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
