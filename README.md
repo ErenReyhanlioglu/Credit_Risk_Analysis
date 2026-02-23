@@ -26,6 +26,7 @@ Credit_Risk_Analysis/
 │   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
 ├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
 └── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
+```
 
 ---
 
