@@ -174,7 +174,7 @@ Modelin ürettiği skorlar ondalık dilimlere (Deciles) bölünmüş ve skor dü
 | **9** | 595 - 609 | 9.225 | 243 | **%2.63** | %97.95 | 8.64 | **0.33x** |
 | **10** | 609 - 688 | 9.226 | 153 | **%1.66** | %100.00 | 0.00 | **0.21x** |
 
-*Tablo Analizi: İlk 3 decile (en düşük skorlu %30'luk kesim), portföydeki toplam batıkların (Kümülatif Kötü) **%60.65**'ini tek başına yakalamaktadır. Ayrıca en riskli 1. Decile'deki müşteriler, portföy ortalamasının tam **3.01 katı (Lift)** daha fazla temerrüt eğilimi göstermektedir. Decile ilerledikçe Bad Rate (%24.32 $\rightarrow$ %1.66) düşüş sergilemektedir.*
+*Tablo Analizi: İlk 3 decile (en düşük skorlu %30'luk kesim), portföydeki toplam batıkların (Kümülatif Kötü) **%60.65**'ini tek başına yakalamaktadır. Ayrıca en riskli 1. Decile'deki müşteriler, portföy ortalamasının tam **3.01 katı (Lift)** daha fazla temerrüt eğilimi göstermektedir. Decile ilerledikçe Bad Rate (%24.32'ten %1.66'ya) düşüş sergilemektedir.*
 
 ### 6.4. Cumulative Lift & Gain Charts
 Modelin "hedefsiz bir onay stratejisine" kıyasla bankaya sağladığı katma değer (Lift) hesaplanmıştır. Kümülatif Gain analizi ile portföydeki toplam batıkların (Defaults) çok büyük bir kısmının, modelin işaret ettiği düşük skorlu dar bir kesimde yakalandığı (Capture Rate) görselleştirilmiştir.
