@@ -148,27 +148,38 @@ Kredi risk modelleri sadece skor üretmekle kalmaz; ürettikleri skorların ista
 ### 6.1. Data Import & Good/Bad Score Distribution
 Eğitim seti dışındaki tamamen görünmeyen (unseen) **Test Seti** içeri aktarılmış ve modelin ürettiği kredi skorlarının (Score) "İyi" (ödeme yapan) ve "Kötü" (temerrüde düşen) müşteriler arasındaki dağılımı incelenmiştir. Puan kartının 440 ile 688 skor bandında mantıksal bir çan eğrisi çizdiği ve "Kötü" müşterilerin düşük skorlarda (sol kuyruk) başarılı bir şekilde yığıldığı gözlemlenmiştir.
 
-![Good vs Bad Score Distribution](outputs/reports/score_distribution.png)
+![Good vs Bad Score Distribution](outputs/reports/score_distribution_seperation_good_vs_bad_customers.png)
 
 ### 6.2. Global Discriminatory Power (ROC & KS)
 Modelin riskleri ayırt etme yeteneği (Rank Ordering) iki temel makro metrik ile kanıtlanmıştır:
 * **Gini Katsayısı (AUC):** Test verisi üzerinde model **0.4550 Gini** (AUC: 0.7275) skoru üretmiştir. Model, istikrarlı bir ayrıştırma gücü sergilemiştir.
 
-![ROC Curve & Gini Score](outputs/reports/roc_curve.png)
-
 * **Kolmogorov-Smirnov (KS) İstatistiği:** İyi ve Kötü müşteri kümülatif dağılımlarının birbirinden maksimum düzeyde uzaklaştığı ölçüdür. Hesaplanan **0.3371 KS İstatistiği**, modelin riski birbirinden net bir sınırla izole edebildiğini göstermektedir. Maksimum ayrışımın yaşandığı **561 Puan**, modelin matematiksel olarak en keskin olduğu optimal noktadır.
 
-![Kolmogorov-Smirnov (KS) Statistic](outputs/reports/ks_statistic.png)
+![Kolmogorov-Smirnov (KS) Statistic](outputs/reports/roc_and_ks_curve.png)
 
 ### 6.3. Rank Ordering & Decile Analysis
 Modelin ürettiği skorlar ondalık dilimlere (Deciles) bölünmüş ve skor düştükçe "Bad Rate"in (Temerrüt Oranının) düzenli olarak artıp artmadığı test edilmiştir. İnceleme sonucunda, risk profilinde "zikzakların" olmadığı, yüksek riskli ilk dilimlerde (Bottom Deciles) kötü müşterilerin başarılı bir şekilde yoğunlaştığı (Concentration) doğrulanmıştır.
 
-![Decile Analysis and Rank Ordering](outputs/reports/decile_analysis.png)
+| Decile | Skor Aralığı | Toplam Müşteri | Kötü Müşteri (Default) | Temerrüt Oranı (Bad Rate) | Kümülatif Kötü Yakalama (%) | KS İstatistiği | Lift (Katma Değer) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1** | 440 - 532 | 9.226 | 2.244 | **%24.32** | %30.13 | 21.90 | **3.01x** |
+| **2** | 532 - 545 | 9.225 | 1.278 | **%13.85** | %47.29 | 29.68 | **1.72x** |
+| **3** | 545 - 554 | 9.225 | 995 | **%10.79** | %60.65 | 33.34 | **1.34x** |
+| **4** | 554 - 562 | 9.226 | 743 | **%8.05** | %70.62 | 33.31 | **1.00x** |
+| **5** | 562 - 570 | 9.225 | 583 | **%6.32** | %78.45 | 30.95 | **0.78x** |
+| **6** | 570 - 578 | 9.225 | 495 | **%5.37** | %85.10 | 27.30 | **0.66x** |
+| **7** | 578 - 586 | 9.226 | 402 | **%4.36** | %90.49 | 22.29 | **0.54x** |
+| **8** | 586 - 595 | 9.225 | 312 | **%3.38** | %94.68 | 15.97 | **0.42x** |
+| **9** | 595 - 609 | 9.225 | 243 | **%2.63** | %97.95 | 8.64 | **0.33x** |
+| **10** | 609 - 688 | 9.226 | 153 | **%1.66** | %100.00 | 0.00 | **0.21x** |
+
+*Tablo Analizi: İlk 3 decile (en düşük skorlu %30'luk kesim), portföydeki toplam batıkların (Kümülatif Kötü) **%60.65**'ini tek başına yakalamaktadır. Ayrıca en riskli 1. Decile'deki müşteriler, portföy ortalamasının tam **3.01 katı (Lift)** daha fazla temerrüt eğilimi göstermektedir. Decile ilerledikçe Bad Rate (%24.32 $\rightarrow$ %1.66) düşüş sergilemektedir.*
 
 ### 6.4. Cumulative Lift & Gain Charts
 Modelin "hedefsiz bir onay stratejisine" kıyasla bankaya sağladığı katma değer (Lift) hesaplanmıştır. Kümülatif Gain analizi ile portföydeki toplam batıkların (Defaults) çok büyük bir kısmının, modelin işaret ettiği düşük skorlu dar bir kesimde yakalandığı (Capture Rate) görselleştirilmiştir.
 
-![Cumulative Lift and Gain Charts](outputs/reports/lift_gain_charts.png)
+![Cumulative Lift and Gain Charts](outputs/reports/cumulative_gain_and_lift_charts.png)
 
 ### 6.5. Cut-off Strategy & Business Decision Matrix
 Modelin istatistiksel çıktısı, finansal bir karar mekanizmasına dönüştürülmüştür. Gerçekleştirilen simülasyonlar doğrultusunda banka için en kârlı/güvenli eşik değer (Cut-off) stratejisi belirlenmiştir:
@@ -186,7 +197,7 @@ Puan kartının ürettiği soyut skorların gerçek hayattaki **Temerrüt Olası
 
 Brier Skorunun 0'a bu denli yakın olması, modelin "tahmin ettiği oran" ile "gerçekleşen risk oranı" (Expected vs Actual) arasında neredeyse mükemmel bir tutarlılık olduğunu kanıtlar. ECE'nin son derece düşük olması ise modelin kalibrasyonunun (Calibration) Basel III normlarına uygunluğunu tasdik eder.
 
-![PD Calibration Curve](outputs/reports/calibration_curve.png)
+![PD Calibration Curve](outputs/reports/pd_calibration_curve.png)
 
 ### 6.7. Score to PD Mapping (Risk Grading)
 
@@ -230,7 +241,7 @@ $$PSI = \sum_{i=1}^{Bins} (Actual\%_i - Expected\%_i) \cdot \ln\left(\frac{Actua
 
 > **Methodological Insight:** Elde edilen 0.0002 değeri, 0.10 olan kırmızı çizginin çok altındadır. Bu durum; 70/30 veri bölme işleminin homojenlik bir şekilde gerçekleştiğini, Eğitim setinde hesaplanan WoE/Kesme noktalarının Test setine uygulanırken veri sızıntısı (Leakage) veya dağılım bozulmasına sebep olmadığını gösterir.
 
-![Population Stability Index Distribution](outputs/reports/psi_distribution.png)
+![Population Stability Index Distribution](outputs/reports/psi_stability_score_distribution_comp.png)
 
 ### 7.2. Characteristic Stability Index (CSI / Feature-Level PSI)
 Sistem genelindeki PSI düşük olsa bile, alt kırılımlardaki bazı değişkenlerin (features) Test setine aktarılırken dağılımsal hatalara (Örn: Aykırı değerlerin veya NaN verilerin yanlış yönetilmesi) maruz kalıp kalmadığını kontrol etmek için **39 nihai değişkenin her biri için ayrı ayrı CSI** hesaplanmıştır.
@@ -245,7 +256,7 @@ Yapılan analizde, **39 değişkenin tamamı "Stable" (PSI < 0.10)** seviyesinde
 | `PREV_INS_AMT_INSTALMENT_MAX_MAX` | 0.000285 | Stabil |
 | `DAYS_REGISTRATION` | 0.000280 | Stabil |
 
-![Characteristic Stability Index (Feature PSI) Report](outputs/reports/csi_report.png)
+![Characteristic Stability Index (Feature PSI) Report](outputs/reports/features_csı_log_scale_comp.png)
 
 ---
 
