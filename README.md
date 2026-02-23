@@ -1,4 +1,33 @@
-# Professional Credit Risk Scorecard
+# CREDIT RISK ANALYSE
+
+---
+
+## 0. Directory Structure
+*Not: `data/raw/` ve `data/processed/` klasörleri dosya boyutu limitleri nedeniyle GitHub reposuna dahil edilmemiştir. Veri setinin orijinal hali Kaggle "Home Credit Default Risk" yarışmasından temin edilebilir.*
+
+```text
+Credit_Risk_Analysis/
+├── notebooks/
+│   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
+│   ├── 02_feature_selection_and_binning.ipynb # IV/WoE dönüşümleri, Monotonic Binning ve VIF analizi
+│   ├── 03_logistic_regression_scorecard.ipynb # Model eğitimi, p-value/mantık elemesi ve Scorecard inşası
+│   ├── 04_model_diagnostics_performance.ipynb # Gini, KS, Brier metrikleri ve Cut-off (Eşik Değer) stratejisi
+│   └── 05_model_monitoring_stability_psi.ipynb# PSI/CSI stabilite testleri ve veri kayması (drift) izleme
+├── src/
+│   ├── __init__.py
+│   ├── preprocessing.py              # Domain spesifik özellik (DTI, LTV vb.) üretimi ve veri dönüşümleri
+│   ├── aggregation.py                # Alt tabloları (bureau, previous_application vb.) müşteri seviyesinde birleştirme
+│   ├── scorecard_utils.py            # IV, VIF, P-Value eleme (Pruning) ve Log-Odds to Points (Ölçeklendirme) fonksiyonları
+│   └── metrics.py                    # Gini, KS, PSI hesaplama, Cut-off simülasyonları ve Diagnostik Görselleştirme araçları
+├── outputs/
+│   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
+│   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
+│   ├── feature_description_39.txt    # Modeldeki 39 nihai değişkenin matematiksel formüllerini ve bankacılık anlamlarını içerir 
+│   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
+├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
+└── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
+
+---
 
 ## 1. Project Overview & Executive Summary
 
@@ -105,6 +134,8 @@ Tam Model'in özet istatistikleri incelendiğinde, bazı değişkenlerin çoklu 
 Finansal gerçeklikle çelişen katsayıları (Beta) bulabilmek amacıyla 41 değişkenlik modelin katsayıları incelenmiş ve "ters işaretli" (pozitif katsayılı) 2 değişken (`BURO_CREDIT_ACTIVE_Active_MEAN` ve `PREV_LTV_RATIO_MIN`) iş mantığıyla çeliştiği gerekçesiyle modelden çıkarılmıştır. Sonuç olarak; hem istatistiksel olarak anlamlı hem de bankacılık teorisiyle uyumlu (Logical) **39 nihai değişken** tutulmuştur.
 
 ![Coefficent Tornado Chart](outputs/reports/coefficent_tornado_chart_39_features.png)
+
+> **Note:** Bu 39 nihai değişkenin ham tablolardan nasıl türetildiğine, matematiksel agregasyon kurallarına ve risk modellemesinde neyi ifade ettiklerine dair açıklamalar, `feature_description_39.txt` dosyasında belgelenmiştir.
 
 ### 5.4. Final Model Estimation & Performance Check (Complexity vs. Performance)
 Kalan 39 değişken ile nihai Lojistik Regresyon modeli kurulmuştur. 96 değişkenden 39 değişkene düşülmesi, modelin öngörücü gücünde (predictive power) göz ardı edilebilir düzeyde minimal bir metrik düşüşüne sebep olmuş, buna karşın model hafiflemiş ve iş mantığına uygun hale getirilmiştir.
@@ -259,27 +290,3 @@ Yapılan analizde, **39 değişkenin tamamı "Stable" (PSI < 0.10)** seviyesinde
 ![Characteristic Stability Index (Feature PSI) Report](outputs/reports/features_csı_log_scale_comp.png)
 
 ---
-
-## 8. Directory Structure
-*Not: Orijinal `data/raw/` ve `data/processed/` klasörleri dosya boyutu limitleri nedeniyle GitHub reposuna dahil edilmemiştir. Veri setinin orijinal hali Kaggle "Home Credit Default Risk" yarışmasından temin edilebilir.*
-
-```text
-Credit_Risk_Analysis/
-├── notebooks/
-│   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
-│   ├── 02_feature_selection_and_binning.ipynb # IV/WoE dönüşümleri, Monotonic Binning ve VIF analizi
-│   ├── 03_logistic_regression_scorecard.ipynb # Model eğitimi, p-value/mantık elemesi ve Scorecard inşası
-│   ├── 04_model_diagnostics_performance.ipynb # Gini, KS, Brier metrikleri ve Cut-off (Eşik Değer) stratejisi
-│   └── 05_model_monitoring_stability_psi.ipynb# PSI/CSI stabilite testleri ve veri kayması (drift) izleme
-├── src/
-│   ├── __init__.py
-│   ├── preprocessing.py              # Domain spesifik özellik (DTI, LTV vb.) üretimi ve veri dönüşümleri
-│   ├── aggregation.py                # Alt tabloları (bureau, previous_application vb.) müşteri seviyesinde birleştirme
-│   ├── scorecard_utils.py            # IV, VIF, P-Value eleme (Pruning) ve Log-Odds to Points (Ölçeklendirme) fonksiyonları
-│   └── metrics.py                    # Gini, KS, PSI hesaplama, Cut-off simülasyonları ve Diagnostik Görselleştirme araçları
-├── outputs/
-│   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
-│   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
-│   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
-├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
-└── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu

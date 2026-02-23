@@ -1,7 +1,5 @@
-## 8. Directory Structure
 *Not: Orijinal `data/raw/` ve `data/processed/` klasörleri dosya boyutu limitleri nedeniyle GitHub reposuna dahil edilmemiştir. Veri setinin orijinal hali Kaggle "Home Credit Default Risk" yarışmasından temin edilebilir.*
 
-```text
 Credit_Risk_Analysis/
 ├── notebooks/
 │   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
@@ -18,6 +16,7 @@ Credit_Risk_Analysis/
 ├── outputs/
 │   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
 │   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
+│   ├── feature_description_39.txt    # Modeldeki 39 nihai değişkenin matematiksel formüllerini ve bankacılık anlamlarını içerir 
 │   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
 ├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
 └── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
