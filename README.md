@@ -8,25 +8,24 @@
 ```text
 Credit_Risk_Analysis/
 ├── notebooks/
-│   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
-│   ├── 02_feature_selection_and_binning.ipynb # IV/WoE dönüşümleri, Monotonic Binning ve VIF analizi
-│   ├── 03_logistic_regression_scorecard.ipynb # Model eğitimi, p-value/mantık elemesi ve Scorecard inşası
-│   ├── 04_model_diagnostics_performance.ipynb # Gini, KS, Brier metrikleri ve Cut-off (Eşik Değer) stratejisi
-│   └── 05_model_monitoring_stability_psi.ipynb# PSI/CSI stabilite testleri ve veri kayması (drift) izleme
+│   ├── 01_data_integrity_check.ipynb          # Veri kalitesi, EDA ve korelasyon analizleri
+│   ├── 02_feature_selection_and_binning.ipynb # IV/WoE dönüşümleri, Monotonic Binning ve VIF analizi
+│   ├── 03_logistic_regression_scorecard.ipynb # Model eğitimi, p-value/mantık elemesi ve Scorecard inşası
+│   ├── 04_model_diagnostics_performance.ipynb # Gini, KS, Brier metrikleri ve Cut-off (Eşik Değer) stratejisi
+│   └── 05_model_monitoring_stability_psi.ipynb# PSI/CSI stabilite testleri ve veri kayması (drift) izleme
 ├── src/
-│   ├── __init__.py
-│   ├── preprocessing.py              # Domain spesifik özellik (DTI, LTV vb.) üretimi ve veri dönüşümleri
-│   ├── aggregation.py                # Alt tabloları (bureau, previous_application vb.) müşteri seviyesinde birleştirme
-│   ├── scorecard_utils.py            # IV, VIF, P-Value eleme (Pruning) ve Log-Odds to Points (Ölçeklendirme) fonksiyonları
-│   └── metrics.py                    # Gini, KS, PSI hesaplama, Cut-off simülasyonları ve Diagnostik Görselleştirme araçları
+│   ├── __init__.py
+│   ├── preprocessing.py              # Domain spesifik özellik (DTI, LTV vb.) üretimi ve veri dönüşümleri
+│   ├── aggregation.py                # Alt tabloları (bureau, previous_application vb.) müşteri seviyesinde birleştirme
+│   ├── scorecard_utils.py            # IV, VIF, P-Value eleme (Pruning) ve Log-Odds to Points (Ölçeklendirme) fonksiyonları
+│   └── metrics.py                    # Gini, KS, PSI hesaplama, Cut-off simülasyonları ve Diagnostik Görselleştirme araçları
 ├── outputs/
-│   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
-│   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
-│   ├── feature_description_39.txt    # Modeldeki 39 nihai değişkenin matematiksel formüllerini ve bankacılık anlamlarını içerir 
-│   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
-├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
-└── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
-```text
+│   ├── models/                       # .pkl formatında üretime hazır yapay zeka modelleri (`final_logical_model.pkl`)
+│   ├── reports/                      # Karar matrisleri, diagnostik grafikler (.png) ve analiz çıktıları
+│   ├── feature_description_39.txt    # Modeldeki 39 nihai değişkenin matematiksel formüllerini ve bankacılık anlamlarını içerir 
+│   └── final_scorecard.xlsx          # Puanlama kurallarının iş birimi (Risk/Tahsis) formatındaki hali
+├── requirements.txt                  # Proje bağımlılıkları (pandas, scorecardpy, statsmodels vb.)
+└── README.md                         # Proje metodolojisi ve kullanım dökümantasyonu
 
 ---
 
